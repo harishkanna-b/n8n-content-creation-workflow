@@ -1,0 +1,1312 @@
+{
+  "name": "Content Creation Workflow #2",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "fields['Final Analysis']",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        260
+      ],
+      "id": "bde27fa2-5944-45e2-a767-f2bf8549d776",
+      "name": "Merge Content"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyse this Content Frameworks:\n\nConcatented Final Analysis: {{ $json['concatenated_fields\\'Final_Analysis\\''] }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=LinkedIn Copy Manifesto Analysis Prompt\n\nYou are an expert content strategist and copywriting analyst. Your task is to analyze a collection of LinkedIn posts from a specific person and extract their unique \"Copy Manifesto\" - a comprehensive blueprint of their writing style, approach, and strategy.\n\nYour Mission\nAnalyze the provided LinkedIn content and create a detailed Copy Manifesto that captures this person's unique voice, approach, and content strategy. This manifesto will be used to understand and potentially replicate their successful LinkedIn content approach.\n\nContent to Analyze\nYou will receive LinkedIn posts, engagement data, and potentially comments from a specific LinkedIn account. Analyze patterns across ALL the content to identify consistent approaches.\n\nAnalysis Framework\n1. TONE OF VOICE ANALYSIS\n\nIdentify their dominant communication style (Conversational, Direct, Friendly, Storytelling, Bold)\nLook for secondary tones that support their main voice\nNote what they actively avoid (formal language, corporate speak, etc.)\nCapture the essence of what makes their voice unique\n\n2. TARGET AUDIENCE IDENTIFICATION\n\nDetermine who they're speaking to based on language, references, and pain points mentioned\nIdentify specific roles, industries, and business stages they target\nLook for clues about audience sophistication level and challenges\n\n3. PAIN POINT MAPPING\n\nExtract the specific problems they address repeatedly\nIdentify their \"trigger phrases\" - how they reference common frustrations\nAssess the intensity level of problems they focus on\nNote how they make pain points relatable and urgent\n\n4. TOPIC APPROACH PATTERNS\n\nDetermine if they lead with story then insight, or insight then story\nIdentify how they make content feel human vs. textbook\nLook for recurring narrative structures and content flows\n\n5. POST FORMAT ANALYSIS\n\nAnalyze their hook patterns - how they start posts\nMap their typical post structure (hook → body → CTA)\nNote their use of white space, line breaks, and formatting\nIdentify their call-to-action and engagement patterns\n\n6. SENTIMENT & EMOTIONAL BALANCE\n\nAssess their overall emotional approach\nIdentify how they balance problem-awareness with optimism\nNote their use of vulnerability, confidence, humor, and other emotional elements\n\n7. VISUAL & FORMATTING STYLE\n\nAnalyze their approach to visuals, emojis, and formatting\nNote patterns in how they structure text for readability\nIdentify any unique formatting signatures\n\n8. CONTENT THEME CATEGORIZATION\n\nCategorize their content into themes (personal stories, tactical advice, bold POVs, etc.)\nAssess frequency of each theme type\nProvide specific examples from their content\n\n9. CREDIBILITY BUILDING\n\nIdentify how they establish authority without overselling\nNote their use of numbers, results, and process mentions\nAssess their subtlety in credibility signaling\n\n10. ENGAGEMENT STRATEGY\n\nAnalyze their question-asking patterns\nIdentify how they create relatability through vulnerability\nNote community-building tactics and interaction styles\n\n11. UNIQUE SIGNATURES\n\nIdentify catchphrases, unique words, or expressions they use\nNote distinctive formatting or structural elements\nCapture what makes their content immediately recognizable\n\nOutput Instructions\nCRITICAL: You must provide your analysis in the exact JSON structure specified. Do not provide explanatory text before or after the JSON output.\nThe JSON must include all required fields and follow the schema exactly. Pay special attention to:\n\nUse the exact enum values provided for fields like primaryTone, intensityLevel, etc.\nProvide specific examples from their actual content where requested\nBe thorough but concise in descriptions\nEnsure arrays contain relevant, specific items\nFill all required fields completely\n\nAnalysis Quality Standards\n\nSpecificity: Use concrete examples from their content\nPattern Recognition: Identify consistent approaches across multiple posts\nDepth: Go beyond surface observations to capture strategic intent\nAccuracy: Base conclusions on clear evidence from the content\nUniqueness: Focus on what makes their approach distinctive\n\nRemember\nThis manifesto should capture the essence of their content strategy so completely that someone could use it to create content that feels authentically similar to their style. Focus on patterns, not one-off examples, and prioritize the elements that appear most consistently across their content.\nAnalyze the provided LinkedIn content and output the Copy Manifesto in the required JSON format."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        320,
+        260
+      ],
+      "id": "6e63fd78-2f86-4d6d-b7a6-81dc7a6b82f6",
+      "name": "Create LinkedIn Content Manifesto",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        320,
+        440
+      ],
+      "id": "2a661ef0-5c76-435d-9585-b8baac8bdd3d",
+      "name": "Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BiSKmpxVq4mzn6mQ",
+          "name": "Connect your Gemini API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"toneOfVoice\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"primaryTone\": {\n          \"type\": \"string\",\n          \"enum\": [\"Conversational\", \"Direct\", \"Friendly\", \"Storytelling\", \"Bold\"]\n        },\n        \"secondaryTones\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\",\n            \"enum\": [\"Conversational\", \"Direct\", \"Friendly\", \"Storytelling\", \"Bold\"]\n          }\n        },\n        \"toneDescription\": {\n          \"type\": \"string\"\n        },\n        \"avoidancePatterns\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\"primaryTone\", \"toneDescription\"]\n    },\n    \"targetAudience\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"primaryPersonas\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"title\": {\n                \"type\": \"string\"\n              },\n              \"industry\": {\n                \"type\": \"string\"\n              },\n              \"stageLevel\": {\n                \"type\": \"string\",\n                \"enum\": [\"early-stage\", \"growth-stage\", \"mature\", \"enterprise\"]\n              },\n              \"characteristics\": {\n                \"type\": \"array\",\n                \"items\": {\n                  \"type\": \"string\"\n                }\n              }\n            },\n            \"required\": [\"title\", \"industry\", \"stageLevel\"]\n          }\n        },\n        \"audienceDescription\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\"primaryPersonas\", \"audienceDescription\"]\n    },\n    \"painPointsToTap\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"corePainPoints\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"painPoint\": {\n                \"type\": \"string\"\n              },\n              \"intensityLevel\": {\n                \"type\": \"string\",\n                \"enum\": [\"low\", \"medium\", \"high\", \"critical\"]\n              },\n              \"triggerPhrases\": {\n                \"type\": \"array\",\n                \"items\": {\n                  \"type\": \"string\"\n                }\n              }\n            },\n            \"required\": [\"painPoint\", \"intensityLevel\"]\n          }\n        },\n        \"relatabilityTriggers\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\"corePainPoints\", \"relatabilityTriggers\"]\n    },\n    \"topicApproach\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"primaryApproach\": {\n          \"type\": \"string\",\n          \"enum\": [\"story-first-then-insight\", \"insight-first-then-story\", \"mixed-approach\"]\n        },\n        \"humanPOVStyle\": {\n          \"type\": \"string\"\n        },\n        \"narrativePatterns\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\"primaryApproach\", \"humanPOVStyle\"]\n    },\n    \"postFormat\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"hookPatterns\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"bodyStructure\": {\n          \"type\": \"string\"\n        },\n        \"whiteSpaceUsage\": {\n          \"type\": \"string\"\n        },\n        \"ctaStyle\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\"hookPatterns\", \"bodyStructure\", \"ctaStyle\"]\n    },\n    \"sentiment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"overallSentiment\": {\n          \"type\": \"string\"\n        },\n        \"balanceStyle\": {\n          \"type\": \"string\"\n        },\n        \"emotionalElements\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\",\n            \"enum\": [\"raw-honesty\", \"smart-takes\", \"friendly-nudges\", \"vulnerability\", \"confidence\", \"humor\"]\n          }\n        }\n      },\n      \"required\": [\"overallSentiment\", \"balanceStyle\", \"emotionalElements\"]\n    },\n    \"visualStyle\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"visualPreferences\": {\n          \"type\": \"string\"\n        },\n        \"emojiUsage\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"frequency\": {\n              \"type\": \"string\",\n              \"enum\": [\"never\", \"rarely\", \"occasionally\", \"frequently\"]\n            },\n            \"maxPerPost\": {\n              \"type\": \"number\"\n            },\n            \"usage\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\"frequency\"]\n        }\n      },\n      \"required\": [\"visualPreferences\"]\n    },\n    \"contentThemeBuckets\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"theme\": {\n            \"type\": \"string\",\n            \"enum\": [\"personal-story\", \"mistake-lesson\", \"tactical-advice\", \"SOPs\", \"hard-questions\", \"bold-POVs\", \"behind-the-scenes\", \"tools-experiments\"]\n          },\n          \"frequency\": {\n            \"type\": \"string\",\n            \"enum\": [\"rare\", \"occasional\", \"frequent\", \"primary\"]\n          },\n          \"examples\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          }\n        },\n        \"required\": [\"theme\", \"frequency\"]\n      }\n    },\n    \"credibilitySignals\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"numberMentions\": {\n          \"type\": \"string\"\n        },\n        \"processReferences\": {\n          \"type\": \"string\"\n        },\n        \"subtletyLevel\": {\n          \"type\": \"string\",\n          \"enum\": [\"very-subtle\", \"moderate\", \"direct\", \"explicit\"]\n        },\n        \"credibilityPatterns\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\"subtletyLevel\", \"credibilityPatterns\"]\n    },\n    \"frequencyAndConsistency\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"estimatedFrequency\": {\n          \"type\": \"string\"\n        },\n        \"consistencyLevel\": {\n          \"type\": \"string\",\n          \"enum\": [\"very-consistent\", \"mostly-consistent\", \"somewhat-consistent\", \"inconsistent\"]\n        },\n        \"patterns\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\"estimatedFrequency\", \"consistencyLevel\"]\n    },\n    \"engagementHooks\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"questionTypes\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"vulnerabilitySharing\": {\n          \"type\": \"string\"\n        },\n        \"interactionStyle\": {\n          \"type\": \"string\"\n        },\n        \"communityBuilding\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\"questionTypes\", \"interactionStyle\"]\n    },\n    \"uniqueSignatures\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"catchphrases\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"formattingQuirks\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"distinctiveElements\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  },\n  \"required\": [\n    \"toneOfVoice\",\n    \"targetAudience\", \n    \"painPointsToTap\",\n    \"topicApproach\",\n    \"postFormat\",\n    \"sentiment\",\n    \"visualStyle\",\n    \"contentThemeBuckets\",\n    \"credibilitySignals\",\n    \"frequencyAndConsistency\",\n    \"engagementHooks\"\n  ]\n}",
+        "autoFix": true,
+        "customizeRetryPrompt": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        500,
+        440
+      ],
+      "id": "2a688e5c-697b-4cd9-8fe0-0d879fd85321",
+      "name": "SOP"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        600,
+        580
+      ],
+      "id": "d29d4712-4409-4213-896d-31040708db53",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BiSKmpxVq4mzn6mQ",
+          "name": "Connect your Gemini API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appKPrGF3XRu36rF0",
+          "mode": "list",
+          "cachedResultName": "Content Idea Creation Table",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblHaNGjGLDRRTfuF",
+          "mode": "list",
+          "cachedResultName": "Manifesto",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0/tblHaNGjGLDRRTfuF"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ToneofVoice": "={{ $json.output.toneOfVoice }}",
+            "TargetAudience": "={{ $json.output.targetAudience }}",
+            "PainPointsToTap": "={{ $json.output.painPointsToTap }}",
+            "TopicApproach": "={{ $json.output.topicApproach }}",
+            "PostFormat": "={{ $json.output.postFormat }}",
+            "Sentiments": "={{ $json.output.sentiment }}",
+            "VisualStyles": "={{ $json.output.visualStyle }}",
+            "ContentThemeBucket": "={{ $json.output.contentThemeBuckets }}",
+            "credibilitySignals": "={{ $json.output.credibilitySignals }}",
+            "frequencyAndConsistency": "={{ $json.output.frequencyAndConsistency }}",
+            "engagementHooks": "={{ $json.output.engagementHooks }}",
+            "uniqueSignatures": "={{ $json.output.uniqueSignatures }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ToneofVoice",
+              "displayName": "ToneofVoice",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "TargetAudience",
+              "displayName": "TargetAudience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PainPointsToTap",
+              "displayName": "PainPointsToTap",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "TopicApproach",
+              "displayName": "TopicApproach",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PostFormat",
+              "displayName": "PostFormat",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Sentiments",
+              "displayName": "Sentiments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "VisualStyles",
+              "displayName": "VisualStyles",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ContentThemeBucket",
+              "displayName": "ContentThemeBucket",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "credibilitySignals",
+              "displayName": "credibilitySignals",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "frequencyAndConsistency",
+              "displayName": "frequencyAndConsistency",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "engagementHooks",
+              "displayName": "engagementHooks",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uniqueSignatures",
+              "displayName": "uniqueSignatures",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        260
+      ],
+      "id": "e772df03-f3a6-4498-809c-b76970781eb4",
+      "name": "Add to Manifesto",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XtjoJm2ew8jZzu6f",
+          "name": "Connect your Airtable API token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        900,
+        440
+      ],
+      "id": "93974ad5-fbd2-40b4-9927-d8b4113a7129",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BiSKmpxVq4mzn6mQ",
+          "name": "Connect your Gemini API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"linkedinSearchTerms\": [\n    {\n      \"category\": \"Scaling Challenges\",\n      \"booleanQuery\": \"(\\\"scaling startup\\\" OR \\\"growth bottleneck\\\" OR \\\"scaling challenges\\\") AND (\\\"product manager\\\" OR \\\"founder\\\" OR \\\"CEO\\\") AND (\\\"SaaS\\\" OR \\\"tech startup\\\")\",\n      \"purpose\": \"Find discussions about scaling problems in tech startups and SaaS companies\"\n    },\n    {\n      \"category\": \"Product-Market Fit\",\n      \"booleanQuery\": \"(\\\"product market fit\\\" OR \\\"PMF\\\" OR \\\"finding market fit\\\") AND (\\\"early stage\\\" OR \\\"startup\\\" OR \\\"pivot\\\") NOT \\\"consulting\\\"\",\n      \"purpose\": \"Discover conversations about product-market fit challenges and strategies\"\n    },\n    {\n      \"category\": \"Startup Leadership\",\n      \"booleanQuery\": \"(\\\"startup founder\\\" OR \\\"entrepreneur\\\") AND (\\\"leadership lessons\\\" OR \\\"founder mistakes\\\" OR \\\"startup failures\\\") AND \\\"growth stage\\\"\",\n      \"purpose\": \"Find authentic leadership experiences and lessons from startup founders\"\n    }\n  ],\n  \"redditSearchTerms\": [\n    {\n      \"category\": \"Scaling Problems\",\n      \"searchPhrase\": \"startup scaling bottleneck growth problems\",\n      \"targetSubreddits\": [\"r/startups\", \"r/entrepreneur\", \"r/SaaS\"],\n      \"purpose\": \"Find real discussions about scaling challenges and solutions\"\n    },\n    {\n      \"category\": \"Product-Market Fit\",\n      \"searchPhrase\": \"product market fit struggles early stage\",\n      \"targetSubreddits\": [\"r/startups\", \"r/ProductManagement\", \"r/entrepreneur\"],\n      \"purpose\": \"Discover how founders discuss PMF challenges and breakthroughs\"\n    },\n    {\n      \"category\": \"Founder Stories\",\n      \"searchPhrase\": \"startup failure lessons learned mistakes\",\n      \"targetSubreddits\": [\"r/startups\", \"r/entrepreneur\", \"r/smallbusiness\"],\n      \"purpose\": \"Find authentic failure stories and lessons from founders\"\n    }\n  ],\n  \"twitterSearchTerms\": [\n    {\n      \"category\": \"Scaling Discussions\",\n      \"searchQuery\": \"(\\\"scaling startup\\\" OR \\\"growth bottleneck\\\" OR \\\"startup scaling\\\") -promoted\",\n      \"hashtags\": [\"#startup\", \"#scaling\", \"#growth\", \"#SaaS\"],\n      \"purpose\": \"Track real-time conversations about startup scaling challenges\"\n    },\n    {\n      \"category\": \"Product-Market Fit\",\n      \"searchQuery\": \"(\\\"product market fit\\\" OR \\\"PMF\\\" OR \\\"finding PMF\\\") (\\\"startup\\\" OR \\\"early stage\\\")\",\n      \"hashtags\": [\"#PMF\", \"#productmarketfit\", \"#startup\", \"#founder\"],\n      \"purpose\": \"Monitor PMF discussions and insights from the startup community\"\n    },\n    {\n      \"category\": \"Founder Insights\",\n      \"searchQuery\": \"(\\\"startup lessons\\\" OR \\\"founder mistakes\\\" OR \\\"entrepreneurship\\\") -ads\",\n      \"hashtags\": [\"#founder\", \"#startup\", \"#entrepreneurship\", \"#lessons\"],\n      \"purpose\": \"Capture founder wisdom and authentic experiences being shared\"\n    }\n  ],\n  \"researchObjectives\": [\n    \"Identify trending scaling challenges in tech startups and SaaS companies\",\n    \"Discover how entrepreneurs discuss product-market fit struggles and solutions\", \n    \"Find authentic founder stories and lessons that resonate with early-stage entrepreneurs\",\n    \"Monitor sentiment around startup growth strategies and tactical advice\",\n    \"Uncover emerging trends in startup leadership and product development\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1140,
+        440
+      ],
+      "id": "236e5a06-7f59-4071-a241-8ad569416306",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2017a099-67a6-44e8-a08d-a88fdbd9f59c",
+              "name": "linkedinSearchTerms",
+              "value": "={{ $json.output.linkedinSearchTerms }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1460,
+        40
+      ],
+      "id": "44a52afc-1ae6-4474-a5ef-62387e21f250",
+      "name": "LinkedIn Search Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "74b82956-5725-42c4-8bf9-db2abc8aa11b",
+              "name": "redditSearchTerms",
+              "value": "={{ $json.output.redditSearchTerms }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1460,
+        260
+      ],
+      "id": "0669de20-bd02-4b30-a086-9d657d7b8f86",
+      "name": "Reddit Search Query"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e610819-175d-4e79-a756-924952089ba5",
+              "name": "twitterSearchTerms",
+              "value": "={{ $json.output.twitterSearchTerms }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1460,
+        500
+      ],
+      "id": "f5f55e31-a216-4fa3-80bb-43da7b2bdfa2",
+      "name": "X Search Terms"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appKPrGF3XRu36rF0",
+          "mode": "list",
+          "cachedResultName": "Content Idea Creation Table",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmfBCmLWAp4qKQs",
+          "mode": "list",
+          "cachedResultName": "QueryTable",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0/tblmfBCmLWAp4qKQs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "linkedinQuery": "={{ $json.output.linkedinSearchTerms }}",
+            "redditQuery": "={{ $json.output.redditSearchTerms }}",
+            "twitterQuery": "={{ $json.output.twitterSearchTerms }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "linkedinQuery",
+              "displayName": "linkedinQuery",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "redditQuery",
+              "displayName": "redditQuery",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "twitterQuery",
+              "displayName": "twitterQuery",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1460,
+        -180
+      ],
+      "id": "fa109492-b1f6-4a04-9271-477b4239222a",
+      "name": "Add to Query Table",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XtjoJm2ew8jZzu6f",
+          "name": "Connect your Airtable API token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this content:\n\nTone of Voice: {{ $json.fields.ToneofVoice }}\nTarget Audience: {{ $json.fields.TargetAudience }}\nPain Point To Tap: {{ $json.fields.PainPointsToTap }}\nTopic Approach: {{ $json.fields.TopicApproach }}\nPost Format: {{ $json.fields.PostFormat }}\nSentiments: {{ $json.fields.Sentiments }}\nVisual Styles: {{ $json.fields.VisualStyles }}\nContent Theme Bucket: {{ $json.fields.ContentThemeBucket }}\nCredibility Signals: {{ $json.fields.credibilitySignals }}\nFrequency and Consistency: {{ $json.fields.frequencyAndConsistency }}\nEngagement Hook: {{ $json.fields.engagementHooks }}\nUnique Signatures: {{ $json.fields.uniqueSignatures }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# Generate Search Terms for Social Media Research\n\nYou are an expert social media research analyst specializing in identifying trending conversations and market sentiment across LinkedIn, Reddit, and Twitter. Your task is to analyze the provided LinkedIn Copy Manifesto and generate targeted search terms that will uncover relevant discussions, trends, and opinions about the topics, pain points, and themes identified in the manifesto.\n\n## Your Mission\nGenerate platform-specific search terms that will help scrape and analyze conversations related to the content creator's focus areas, target audience pain points, and industry themes. The goal is to find how people are discussing these topics online - both pros and cons, trending discussions, and emerging sentiment.\n\n## Platform-Specific Search Requirements\n\n### LinkedIn Boolean Search Requirements\n- Use **AND**, **OR**, **NOT** (all caps)\n- Use quotation marks **\" \"** for exact phrases\n- Use parentheses **( )** for grouping\n- NO wildcards, brackets, or braces\n- Focus on professional discussions, industry insights, and business challenges\n\n### Reddit Search Strategy\n- Simple keyword phrases that match subreddit discussions\n- Focus on problem-solving communities and industry-specific subreddits\n- Target casual, authentic conversations about pain points\n\n### Twitter Search Strategy\n- Hashtag-friendly terms and trending phrases\n- Include both formal and informal language variations\n- Focus on real-time discussions and quick insights\n\n## Research Categories to Cover\n1. **Industry Challenges** - Core problems the audience faces\n2. **Solution Discussions** - How people are solving these problems\n3. **Tool & Strategy Conversations** - Tactical discussions about methods\n4. **Success & Failure Stories** - Real experiences and case studies\n5. **Expert Opinions** - Thought leadership and industry insights\n6. **Trend Identification** - Emerging topics and future predictions\n\n## Input Data - LinkedIn Copy Manifesto:\n\n**Tone of Voice:**\n```json\n{\n    \"primaryTone\": \"Conversational\",\n    \"secondaryTones\": [\n        \"Friendly\",\n        \"Storytelling\"\n    ],\n    \"toneDescription\": \"The tone is warm and inviting, often using storytelling to make connections with the audience. It avoids jargon and focuses on being expressive yet relatable.\",\n    \"avoidancePatterns\": [\n        \"formal language\",\n        \"corporate speak\"\n    ]\n}\n```\n\n**Target Audience:**\n```json\n{\n    \"primaryPersonas\": [\n        {\n            \"title\": \"Entrepreneurs\",\n            \"industry\": \"Tech Startups\",\n            \"stageLevel\": \"early-stage\",\n            \"characteristics\": [\n                \"innovative\",\n                \"risk-takers\",\n                \"passionate\"\n            ]\n        },\n        {\n            \"title\": \"Product Managers\",\n            \"industry\": \"SaaS\",\n            \"stageLevel\": \"growth-stage\",\n            \"characteristics\": [\n                \"detail-oriented\",\n                \"strategic thinkers\",\n                \"future-focused\"\n            ]\n        }\n    ],\n    \"audienceDescription\": \"The content is geared towards individuals involved in technology and startups, particularly those in leadership or product-focused roles. The readers are in early to growth stages seeking strategic insights and community connection.\"\n}\n```\n\n**Pain Points to Tap:**\n```json\n{\n    \"corePainPoints\": [\n        {\n            \"painPoint\": \"Scaling challenges in startups\",\n            \"intensityLevel\": \"high\",\n            \"triggerPhrases\": [\n                \"struggling with growth\",\n                \"bottleneck at scale\"\n            ]\n        },\n        {\n            \"painPoint\": \"Product-market fit uncertainties\",\n            \"intensityLevel\": \"critical\",\n            \"triggerPhrases\": [\n                \"finding the market fit\",\n                \"pivot or persevere\"\n            ]\n        }\n    ],\n    \"relatabilityTriggers\": [\n        \"growth struggles\",\n        \"market dynamics\"\n    ]\n}\n```\n\n**Topic Approach:**\n```json\n{\n    \"primaryApproach\": \"story-first-then-insight\",\n    \"humanPOVStyle\": \"Engages the reader with a human touch by sharing relatable experiences followed by practical insights.\",\n    \"narrativePatterns\": [\n        \"personal journey anecdotes\",\n        \"lessons from real-world scenarios\"\n    ]\n}\n```\n\n**Content Theme Buckets:**\n```json\n[\n    {\n        \"theme\": \"personal-story\",\n        \"frequency\": \"frequent\",\n        \"examples\": [\n            \"Stories of startup failures and eventual success.\",\n            \"Personal experiences in product development.\"\n        ]\n    },\n    {\n        \"theme\": \"tactical-advice\",\n        \"frequency\": \"primary\",\n        \"examples\": [\n            \"Step-by-step guides on finding product-market fit.\",\n            \"Strategies for scaling up efficiently.\"\n        ]\n    },\n    {\n        \"theme\": \"bold-POVs\",\n        \"frequency\": \"occasional\",\n        \"examples\": [\n            \"Challenging industry norms.\",\n            \"Predictions for tech trends.\"\n        ]\n    }\n]\n```\n\n**Engagement Hooks:**\n```json\n{\n    \"questionTypes\": [\n        \"Open-ended questions\",\n        \"Reflective questions\"\n    ],\n    \"vulnerabilitySharing\": \"Frequently shares personal struggles and industry insights to create connections.\",\n    \"interactionStyle\": \"Engages with comments personally, fostering a two-way dialogue.\",\n    \"communityBuilding\": [\n        \"Acknowledges regular contributors\",\n        \"Encourages sharing among peers\"\n    ]\n}\n```\n\n**Credibility Signals:**\n```json\n{\n    \"numberMentions\": \"Uses data points occasionally to validate opinions.\",\n    \"processReferences\": \"Mentions specific processes or frameworks in context.\",\n    \"subtletyLevel\": \"moderate\",\n    \"credibilityPatterns\": [\n        \"Shares personal experiences to build trust.\",\n        \"References to known industry experts.\"\n    ]\n}\n```\n\n## Task Instructions\n\nAnalyze this Copy Manifesto and generate comprehensive search terms that will help discover authentic conversations about:\n\n1. **Scaling challenges** that early-stage entrepreneurs and growth-stage product managers face\n2. **Product-market fit discussions** and the struggles around finding PMF\n3. **Personal success/failure stories** in the startup and SaaS space\n4. **Tactical advice** about startup growth and product development\n5. **Industry trends** and bold predictions about tech/SaaS future\n\nFocus on finding both positive discussions (success stories, solutions) and negative sentiment (frustrations, failures, challenges) to get a complete picture of how these topics are being discussed online.\n\n**Generate 4-6 search terms for each platform** that will uncover the most relevant and authentic conversations related to this content creator's focus areas.\n\nReturn your analysis in the specified JSON format with LinkedIn Boolean queries, Reddit search phrases with target subreddits, and Twitter search queries with relevant hashtags."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        940,
+        260
+      ],
+      "id": "743625c9-27f1-4c83-8985-1f0ad33ac766",
+      "name": "Query creator agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data\nconst inputData = $input.all();\n\n// Initialize array to store all keywords\nlet allKeywords = [];\n\n// Process each item in the input\ninputData.forEach(item => {\n  const linkedinSearchTerms = item.json.linkedinSearchTerms;\n  \n  linkedinSearchTerms.forEach(searchTerm => {\n    const booleanQuery = searchTerm.booleanQuery;\n    \n    // Extract quoted phrases (keep as single keywords)\n    const quotedPhrases = booleanQuery.match(/\"[^\"]+\"/g) || [];\n    quotedPhrases.forEach(phrase => {\n      allKeywords.push(phrase.replace(/\"/g, '')); // Remove quotes and add to keywords\n    });\n    \n    // Remove quoted phrases and extract individual words\n    let cleanQuery = booleanQuery;\n    quotedPhrases.forEach(phrase => {\n      cleanQuery = cleanQuery.replace(phrase, '');\n    });\n    \n    // Extract individual keywords (remove operators and parentheses)\n    const individualWords = cleanQuery\n      .replace(/\\s+(AND|OR|NOT)\\s+/gi, ' ') // Remove boolean operators\n      .replace(/[()]/g, ' ') // Remove parentheses\n      .split(/\\s+/) // Split by whitespace\n      .filter(word => word.trim() !== '' && word.length > 0) // Remove empty strings\n      .filter(word => !['AND', 'OR', 'NOT'].includes(word.toUpperCase())); // Remove any remaining operators\n    \n    allKeywords = allKeywords.concat(individualWords);\n  });\n});\n\n// Remove duplicates and clean up keywords\nconst uniqueKeywords = [...new Set(allKeywords)]\n  .filter(keyword => keyword && keyword.trim() !== '')\n  .map(keyword => keyword.trim());\n\n// Return the result formatted for Apify actor\nreturn [{\n  json: {\n    maxComments: 0,\n    maxPosts: 30,\n    maxReactions: 0,\n    scrapeComments: false,\n    scrapeReactions: false,\n    searchQueries: uniqueKeywords\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        40
+      ],
+      "id": "519f2c52-1f3a-4d09-9b83-8e3038ebd92c",
+      "name": "Format for LinkedIn"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data\nconst inputData = $input.all();\n\n// Initialize array to store all actor inputs\nlet actorInputs = [];\n\n// Process each item in the input\ninputData.forEach(item => {\n  const redditSearchTerms = item.json.redditSearchTerms;\n  \n  redditSearchTerms.forEach((searchTerm, index) => {\n    // Create actor input for each search term\n    const actorInput = {\n      \"debugMode\": false,\n      \"ignoreStartUrls\": false,\n      \"includeNSFW\": true,\n      \"maxComments\": 10,\n      \"maxCommunitiesCount\": 2,\n      \"maxItems\": 10,\n      \"maxPostCount\": 10,\n      \"maxUserCount\": 2,\n      \"proxy\": {\n        \"useApifyProxy\": true,\n        \"apifyProxyGroups\": [\n          \"RESIDENTIAL\"\n        ]\n      },\n      \"scrollTimeout\": 40,\n      \"searchComments\": false,\n      \"searchCommunities\": false,\n      \"searchPosts\": true,\n      \"searchUsers\": false,\n      \"searches\": [\n        searchTerm.searchPhrase\n      ],\n      \"skipComments\": false,\n      \"skipCommunity\": false,\n      \"skipUserPosts\": false,\n      \"sort\": \"new\",\n      \"searchCategory\": searchTerm.category,\n      \"searchPurpose\": searchTerm.purpose,\n      \"targetSubreddits\": searchTerm.targetSubreddits,\n      \"searchIndex\": index + 1,\n      \"totalSearches\": redditSearchTerms.length,\n      \"platform\": \"Reddit\"\n    };\n    \n    actorInputs.push(actorInput);\n  });\n});\n\n// Return all actor inputs as separate items\nreturn actorInputs.map(actorInput => ({\n  json: actorInput\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        260
+      ],
+      "id": "cfcb5625-6b6e-499f-96f5-4e2c02bf7339",
+      "name": "Format for Reddit"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/harvestapi~linkedin-post-search/run-sync-get-dataset-items?",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer paste_your_apify_api_key_here"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1900,
+        40
+      ],
+      "id": "bc09008d-1af3-44e1-80a0-249067eb0ef2",
+      "name": "Call LinkedIn Actor"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/trudax~reddit-scraper-lite/run-sync-get-dataset-items?",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer paste_your_apify_api_key_here"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1900,
+        260
+      ],
+      "id": "1bdcc0c5-4e70-4c95-b10e-305dc4f8c182",
+      "name": "Call Reddit Actor"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "content",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        2120,
+        40
+      ],
+      "id": "12c92496-e23a-49ae-b1bf-01fe3e5f73de",
+      "name": "Summarize LinkedIn Content"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "body",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        2120,
+        260
+      ],
+      "id": "341d9d25-85f4-48be-9cec-3a5235ac72cf",
+      "name": "Summarize Reddit Threads"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data\nconst inputData = $input.all();\n\n// Debug: Log the input structure to understand what we're working with\nconsole.log(\"Full input data:\", JSON.stringify(inputData, null, 2));\n\n// Initialize array to store all search terms\nlet allSearchTerms = [];\n\n// Process each item in the input\ninputData.forEach((item, itemIndex) => {\n  console.log(`Processing item ${itemIndex}:`, JSON.stringify(item, null, 2));\n  \n  // Try multiple possible structures\n  let searchTermsArray = null;\n  \n  // Check for xSearchTerms in json property\n  if (item.json && item.json.xSearchTerms) {\n    searchTermsArray = item.json.xSearchTerms;\n    console.log(\"Found xSearchTerms in item.json.xSearchTerms\");\n  }\n  // Check if the entire json is the array\n  else if (item.json && Array.isArray(item.json)) {\n    searchTermsArray = item.json;\n    console.log(\"Found array directly in item.json\");\n  }\n  // Check if json contains the array directly\n  else if (Array.isArray(item.json)) {\n    searchTermsArray = item.json;\n    console.log(\"item.json is an array\");\n  }\n  // Check if the item itself is the structure we need\n  else if (item.searchQuery) {\n    searchTermsArray = [item];\n    console.log(\"Found searchQuery directly in item\");\n  }\n  // Check for other possible property names\n  else if (item.json) {\n    const jsonKeys = Object.keys(item.json);\n    console.log(\"Available keys in item.json:\", jsonKeys);\n    \n    // Look for arrays in the json object\n    for (const key of jsonKeys) {\n      if (Array.isArray(item.json[key])) {\n        searchTermsArray = item.json[key];\n        console.log(`Found array in item.json.${key}`);\n        break;\n      }\n    }\n  }\n  \n  if (searchTermsArray && Array.isArray(searchTermsArray)) {\n    console.log(\"Processing search terms array:\", searchTermsArray);\n    \n    searchTermsArray.forEach((searchTerm, termIndex) => {\n      console.log(`Processing search term ${termIndex}:`, searchTerm);\n      \n      if (searchTerm && searchTerm.searchQuery) {\n        allSearchTerms.push(searchTerm.searchQuery);\n        console.log(`Added search query: ${searchTerm.searchQuery}`);\n      }\n    });\n  } else {\n    console.log(\"No search terms array found in this item\");\n  }\n});\n\nconsole.log(\"Final search terms:\", allSearchTerms);\n\n// Create actor input for X (Twitter)\nconst actorInput = {\n  \"maxItems\": 300,\n  \"searchTerms\": allSearchTerms,\n  \"sort\": \"Latest\"\n};\n\n// Return the actor input\nreturn [{\n  json: actorInput\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        500
+      ],
+      "id": "697d4d0d-d3bc-433e-831c-af6e5b29d610",
+      "name": "Format for X"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/apidojo~twitter-scraper-lite/run-sync-get-dataset-items?",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer paste_your_apify_api_key_here"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1900,
+        500
+      ],
+      "id": "c5cc18c0-3a88-4253-8708-af4971c709c4",
+      "name": "Call X Actor"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "fullText",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        2120,
+        500
+      ],
+      "id": "64136bf1-cc6c-462a-8e2e-d2b84a751a84",
+      "name": "Summarize X Content"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "300bc95a-6a78-4ba4-ba17-c18850f5575d",
+              "name": "LinkedIn Posts Combined",
+              "value": "={{ $json.concatenated_content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2340,
+        40
+      ],
+      "id": "bfe5e2f5-2f3a-48ba-bfb3-5deb667cdaed",
+      "name": "Set LinkedIn"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "209fb63e-544e-4c13-8ba1-a11aa7f2867f",
+              "name": "Reddit Posts Combined ",
+              "value": "={{ $json.concatenated_body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2340,
+        260
+      ],
+      "id": "1652d32b-e70b-45e8-b745-30babab5bda9",
+      "name": "Set Reddit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aecef229-554d-4aee-ab11-dbfd3f2f086e",
+              "name": "X Post Combined",
+              "value": "={{ $json.concatenated_fullText }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2340,
+        500
+      ],
+      "id": "da7845c1-8de1-4597-bba8-a5b8c7292157",
+      "name": "Set X"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2820,
+        260
+      ],
+      "id": "dfe9cdaa-5cd4-4834-add5-a31ff2ad54a1",
+      "name": "Merge",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "LinkedIn Posts Combined",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "X Post Combined",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "Reddit Posts Combined ",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        3040,
+        260
+      ],
+      "id": "9406abed-c254-4aa7-b761-63ce326e3f47",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Comprehensive Content Strategy Manifesto Generator\n\nYou are an expert content strategist and market intelligence analyst specializing in cross-platform social media analysis. Your mission is to synthesize raw social media content from LinkedIn, Reddit, and Twitter to create a comprehensive Content Strategy Manifesto that identifies pain points, trending topics, and optimal content opportunities across all content formats and types.\n\n## Input Data Sources:\n- **LinkedIn Content**: {{ $json.concatenated_LinkedIn_Posts_Combined }}\n- **Reddit Content**: {{ $json.concatenated_Reddit_Posts_Combined_ }}\n- **Twitter Content**: {{ $json.concatenated_X_Post_Combined }}\n- **Personal Copy Manifesto**: {{ $('Create LinkedIn Content Manifesto').first().json }}\n\n## Analysis Framework:\n\n### 1. Pain Points Deep Dive Analysis\nConduct a comprehensive analysis of business, technical, and operational pain points mentioned across all platforms:\n\n- **Critical Business Pain Points**: Identify the most frequently mentioned business challenges\n- **Technical Pain Points**: Software, infrastructure, and technology-related issues\n- **Operational Pain Points**: Process, workflow, and efficiency challenges\n- **Financial Pain Points**: Cost, budget, and ROI concerns\n- **Scaling Pain Points**: Growth, team, and expansion challenges\n- **Customer/User Pain Points**: User experience, satisfaction, and retention issues\n\nFor each pain point category, provide:\n- **Frequency Score** (1-10): How often this pain point is mentioned\n- **Severity Score** (1-10): How critical/urgent this pain point appears\n- **Solution Demand** (1-10): How actively people are seeking solutions\n- **Market Size Indicator**: Estimated addressable market for solutions\n\n### 2. Trending Topics & Themes Analysis\nIdentify and analyze trending topics with strategic implications:\n\n- **Emerging Technologies**: New tools, platforms, and technical solutions gaining traction\n- **Industry Trends**: Sector-specific developments and market movements\n- **Behavioral Trends**: Changing user behaviors and preferences\n- **Investment Trends**: Funding patterns, valuations, and market opportunities\n- **Regulatory Trends**: Compliance, legal, and policy developments\n- **Cultural Trends**: Social movements, values, and community dynamics\n\nFor each trending topic, provide:\n- **Momentum Score** (1-10): How rapidly this trend is gaining attention\n- **Longevity Prediction** (1-10): Likelihood of sustained relevance\n- **Commercial Viability** (1-10): Business opportunity potential\n- **Competitive Density** (1-10): How crowded the space is (1=blue ocean, 10=red ocean)\n\n### 3. Content Opportunity Matrix\nAnalyze the best content topics based on engagement, demand, and strategic value:\n\n- **High-Engagement Topics**: Content that generates significant interaction\n- **Knowledge Gap Topics**: Areas where there's demand but limited quality content\n- **Thought Leadership Opportunities**: Spaces for establishing expertise\n- **Viral Potential Topics**: Content likely to achieve widespread reach\n- **Conversion-Friendly Topics**: Content that drives business actions\n- **Community Building Topics**: Content that fosters engagement and loyalty\n\nFor each content opportunity, provide:\n- **Engagement Potential** (1-10): Expected audience interaction level\n- **Authority Building** (1-10): Potential for establishing expertise\n- **Business Impact** (1-10): Direct contribution to business goals\n- **Content Difficulty** (1-10): Resources required to create quality content\n- **Competition Level** (1-10): How saturated the topic space is\n\n### 4. Cross-Platform Synthesis\nAnalyze how topics perform differently across platforms:\n\n- **LinkedIn Performance**: Professional audience reception and engagement patterns\n- **Reddit Performance**: Community discussion depth and authenticity factors\n- **Twitter Performance**: Viral potential and real-time conversation dynamics\n- **Platform-Specific Opportunities**: Unique advantages each platform offers\n- **Content Adaptation Strategies**: How to optimize content for each platform\n\n### 5. Content Format & Type Analysis\nIdentify the most effective content formats and types based on social media conversations:\n\n**Educational Content:**\n- Tutorials and How-To Guides\n- Industry Insights and Analysis\n- Best Practices and Frameworks\n- Case Studies and Success Stories\n- Trend Analysis and Predictions\n\n**Tool & Resource Content:**\n- Tool Comparisons and Reviews\n- \"Best Of\" Lists and Recommendations\n- Resource Compilations and Guides\n- Software and Platform Analysis\n- Productivity and Workflow Solutions\n\n**Thought Leadership Content:**\n- Industry Commentary and Opinions\n- Future Predictions and Insights\n- Contrarian Takes and Perspectives\n- Personal Experiences and Lessons\n- Strategic Analysis and Frameworks\n\n**Community & Engagement Content:**\n- Q&A and Interactive Content\n- Behind-the-Scenes and Personal Stories\n- Community Discussions and Debates\n- User-Generated Content and Features\n- Polls, Surveys, and Feedback\n\n**Business-Focused Content:**\n- Growth Strategies and Tactics\n- Marketing and Sales Insights\n- Financial and Investment Analysis\n- Operational Excellence Content\n- Leadership and Management Advice\n\nFor each content format, provide:\n- **Platform Suitability** (1-10): How well this format performs on each platform\n- **Audience Demand** (1-10): How much the audience wants this type of content\n- **Creation Difficulty** (1-10): Resources and expertise required\n- **Authority Building Potential** (1-10): How much this builds expertise\n- **Viral Potential** (1-10): Likelihood of widespread sharing\n\n### 6. Personal Manifesto Integration\nAnalyze the personal copy manifesto to ensure content recommendations align with:\n- Personal brand positioning and expertise areas\n- Target audience preferences and needs\n- Content style and tone preferences\n- Business objectives and goals\n- Platform-specific strategies\n\n## Output Format - Comprehensive Content Strategy Manifesto:\n\n```json\n{\n  \"content_strategy_manifesto\": {\n    \"executive_summary\": {\n      \"key_findings\": [\"Finding 1\", \"Finding 2\", \"Finding 3\"],\n      \"primary_opportunity\": \"Main content opportunity identified\",\n      \"strategic_recommendation\": \"Core strategic direction\",\n      \"market_timing\": \"Current market assessment\"\n    },\n    \n    \"pain_points_analysis\": {\n      \"top_pain_points\": [\n        {\n          \"pain_point\": \"Specific challenge\",\n          \"frequency_score\": 8,\n          \"severity_score\": 9,\n          \"content_opportunities\": [\"Content idea 1\", \"Content idea 2\"]\n        }\n      ],\n      \"most_urgent\": \"Most critical pain point\",\n      \"biggest_content_opportunity\": \"Pain point with highest content potential\"\n    },\n    \n    \"trending_topics\": {\n      \"hot_trends\": [\n        {\n          \"topic\": \"Trend name\",\n          \"momentum_score\": 8,\n          \"content_potential\": 9,\n          \"content_angles\": [\"Angle 1\", \"Angle 2\"]\n        }\n      ],\n      \"emerging_opportunities\": [\"Opportunity 1\", \"Opportunity 2\"],\n      \"content_timing\": \"Best timing for trend-based content\"\n    },\n    \n    \"content_opportunities\": {\n      \"high_engagement_content\": [\n        {\n          \"content_idea\": \"Specific content title\",\n          \"content_type\": \"Educational/Tool/Thought Leadership/Community/Business\",\n          \"engagement_potential\": 9,\n          \"platforms\": [\"LinkedIn\", \"Twitter\"],\n          \"target_audience\": \"Specific audience\"\n        }\n      ],\n      \"quick_wins\": [\"Easy content idea 1\", \"Easy content idea 2\"],\n      \"authority_building_content\": [\"Authority content 1\", \"Authority content 2\"]\n    },\n    \n    \"platform_strategies\": {\n      \"linkedin\": {\n        \"best_content_types\": [\"Content type 1\", \"Content type 2\"],\n        \"optimization_tips\": [\"Tip 1\", \"Tip 2\"],\n        \"content_ideas\": [\"LinkedIn idea 1\", \"LinkedIn idea 2\"]\n      },\n      \"reddit\": {\n        \"best_content_types\": [\"Content type 1\", \"Content type 2\"],\n        \"community_approach\": \"How to engage Reddit communities\",\n        \"content_ideas\": [\"Reddit idea 1\", \"Reddit idea 2\"]\n      },\n      \"twitter\": {\n        \"best_content_types\": [\"Content type 1\", \"Content type 2\"],\n        \"engagement_tactics\": [\"Tactic 1\", \"Tactic 2\"],\n        \"content_ideas\": [\"Twitter idea 1\", \"Twitter idea 2\"]\n      }\n    },\n    \n    \"content_calendar\": {\n      \"immediate_actions\": [\n        {\n          \"content_idea\": \"Content to create now\",\n          \"rationale\": \"Why prioritize this\",\n          \"expected_impact\": \"What this will achieve\"\n        }\n      ],\n      \"monthly_themes\": [\n        {\n          \"month\": \"January\",\n          \"theme\": \"Theme name\",\n          \"content_ideas\": [\"Idea 1\", \"Idea 2\"]\n        }\n      ]\n    },\n    \n    \"manifesto_alignment\": {\n      \"brand_fit\": \"How content aligns with personal brand\",\n      \"audience_overlap\": \"How content serves existing audience\",\n      \"differentiation\": \"How content differentiates brand\"\n    },\n    \n    \"success_metrics\": {\n      \"engagement_metrics\": [\"Metric 1\", \"Metric 2\"],\n      \"authority_metrics\": [\"Metric 1\", \"Metric 2\"],\n      \"business_metrics\": [\"Metric 1\", \"Metric 2\"]\n    }\n  }\n}\n``\n\n## Analysis Guidelines:\n\n1. **Comprehensive Content Analysis**: Analyze all types of content opportunities, not just tools\n2. **Evidence-Based Recommendations**: Base all recommendations on specific evidence from the provided content\n3. **Pain Point to Content Mapping**: Connect identified pain points to various content solutions\n4. **Trend Integration**: Show how trending topics relate to different content opportunities\n5. **Cross-Platform Intelligence**: Consider how different content types perform across platforms\n6. **Format Diversity**: Include educational, tool, thought leadership, community, and business content\n7. **Audience-Centric**: Focus on content that serves real audience needs\n8. **Authority Building**: Prioritize content that establishes expertise across multiple areas\n9. **Personal Brand Alignment**: Ensure all recommendations align with personal copy manifesto\n10. **Actionable Integration**: Provide specific, implementable content recommendations\n\n## Success Criteria:\n- Identify at least 5 major pain points with diverse content solutions\n- Highlight 3-5 trending topics with various content opportunities\n- Provide 15+ specific content recommendations across different formats\n- Analyze 5 different content format categories (educational, tool, thought leadership, community, business)\n- Create actionable content calendar with diverse content themes\n- Include platform-specific optimization strategies for all content types\n- Align content strategy with personal copy manifesto\n- Show clear connections between strategic insights and content opportunities\n- Include both trending and evergreen content opportunities\n- Provide comprehensive evaluation criteria for all content types\n\nGenerate a comprehensive Content Strategy Manifesto that identifies pain points, trending topics, and content opportunities across all formats - including educational content, thought leadership, community engagement, business insights, and tool recommendations - creating a holistic content strategy that serves your audience's diverse needs.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        3260,
+        260
+      ],
+      "id": "ee6885c4-4392-4ee2-bbe5-e4c18992e17f",
+      "name": "AI Agent",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"content_strategy_manifesto\": {\n    \"executive_summary\": {\n      \"key_findings\": [\"Finding 1\", \"Finding 2\", \"Finding 3\"],\n      \"primary_opportunity\": \"Main content opportunity identified\",\n      \"strategic_recommendation\": \"Core strategic direction\",\n      \"market_timing\": \"Current market assessment\"\n    },\n    \n    \"pain_points_analysis\": {\n      \"top_pain_points\": [\n        {\n          \"pain_point\": \"Specific challenge\",\n          \"frequency_score\": 8,\n          \"severity_score\": 9,\n          \"content_opportunities\": [\"Content idea 1\", \"Content idea 2\"]\n        }\n      ],\n      \"most_urgent\": \"Most critical pain point\",\n      \"biggest_content_opportunity\": \"Pain point with highest content potential\"\n    },\n    \n    \"trending_topics\": {\n      \"hot_trends\": [\n        {\n          \"topic\": \"Trend name\",\n          \"momentum_score\": 8,\n          \"content_potential\": 9,\n          \"content_angles\": [\"Angle 1\", \"Angle 2\"]\n        }\n      ],\n      \"emerging_opportunities\": [\"Opportunity 1\", \"Opportunity 2\"],\n      \"content_timing\": \"Best timing for trend-based content\"\n    },\n    \n    \"content_opportunities\": {\n      \"high_engagement_content\": [\n        {\n          \"content_idea\": \"Specific content title\",\n          \"content_type\": \"Educational/Tool/Thought Leadership/Community/Business\",\n          \"engagement_potential\": 9,\n          \"platforms\": [\"LinkedIn\", \"Twitter\"],\n          \"target_audience\": \"Specific audience\"\n        }\n      ],\n      \"quick_wins\": [\"Easy content idea 1\", \"Easy content idea 2\"],\n      \"authority_building_content\": [\"Authority content 1\", \"Authority content 2\"]\n    },\n    \n    \"platform_strategies\": {\n      \"linkedin\": {\n        \"best_content_types\": [\"Content type 1\", \"Content type 2\"],\n        \"optimization_tips\": [\"Tip 1\", \"Tip 2\"],\n        \"content_ideas\": [\"LinkedIn idea 1\", \"LinkedIn idea 2\"]\n      },\n      \"reddit\": {\n        \"best_content_types\": [\"Content type 1\", \"Content type 2\"],\n        \"community_approach\": \"How to engage Reddit communities\",\n        \"content_ideas\": [\"Reddit idea 1\", \"Reddit idea 2\"]\n      },\n      \"twitter\": {\n        \"best_content_types\": [\"Content type 1\", \"Content type 2\"],\n        \"engagement_tactics\": [\"Tactic 1\", \"Tactic 2\"],\n        \"content_ideas\": [\"Twitter idea 1\", \"Twitter idea 2\"]\n      }\n    },\n    \n    \"content_calendar\": {\n      \"immediate_actions\": [\n        {\n          \"content_idea\": \"Content to create now\",\n          \"rationale\": \"Why prioritize this\",\n          \"expected_impact\": \"What this will achieve\"\n        }\n      ],\n      \"monthly_themes\": [\n        {\n          \"month\": \"January\",\n          \"theme\": \"Theme name\",\n          \"content_ideas\": [\"Idea 1\", \"Idea 2\"]\n        }\n      ]\n    },\n    \n    \"manifesto_alignment\": {\n      \"brand_fit\": \"How content aligns with personal brand\",\n      \"audience_overlap\": \"How content serves existing audience\",\n      \"differentiation\": \"How content differentiates brand\"\n    },\n    \n    \"success_metrics\": {\n      \"engagement_metrics\": [\"Metric 1\", \"Metric 2\"],\n      \"authority_metrics\": [\"Metric 1\", \"Metric 2\"],\n      \"business_metrics\": [\"Metric 1\", \"Metric 2\"]\n    }\n  }\n}",
+        "autoFix": true,
+        "customizeRetryPrompt": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3460,
+        480
+      ],
+      "id": "0831219e-2a6a-40ff-86d4-ce64ddd3c56d",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        480
+      ],
+      "id": "e0a689a7-d2f3-4be5-8a25-11fd64652ed1",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BiSKmpxVq4mzn6mQ",
+          "name": "Connect your Gemini API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3540,
+        620
+      ],
+      "id": "237305fa-7eec-4b21-a1e7-5cf997152522",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BiSKmpxVq4mzn6mQ",
+          "name": "Connect your Gemini API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Fyf9QNdfRMK01TVU",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3720,
+        260
+      ],
+      "id": "47297cea-3497-44c4-a572-a7f651afa256",
+      "name": "Execute Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Merge Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Content": {
+      "main": [
+        [
+          {
+            "node": "Create LinkedIn Content Manifesto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Create LinkedIn Content Manifesto",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SOP": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Create LinkedIn Content Manifesto",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SOP",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create LinkedIn Content Manifesto": {
+      "main": [
+        [
+          {
+            "node": "Add to Manifesto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Manifesto": {
+      "main": [
+        [
+          {
+            "node": "Query creator agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Query creator agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Query creator agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Search Query": {
+      "main": [
+        [
+          {
+            "node": "Format for Reddit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Search Query": {
+      "main": [
+        [
+          {
+            "node": "Format for LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query creator agent": {
+      "main": [
+        [
+          {
+            "node": "Reddit Search Query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LinkedIn Search Query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "X Search Terms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add to Query Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Call LinkedIn Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for Reddit": {
+      "main": [
+        [
+          {
+            "node": "Call Reddit Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LinkedIn Actor": {
+      "main": [
+        [
+          {
+            "node": "Summarize LinkedIn Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Reddit Actor": {
+      "main": [
+        [
+          {
+            "node": "Summarize Reddit Threads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "X Search Terms": {
+      "main": [
+        [
+          {
+            "node": "Format for X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for X": {
+      "main": [
+        [
+          {
+            "node": "Call X Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call X Actor": {
+      "main": [
+        [
+          {
+            "node": "Summarize X Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize LinkedIn Content": {
+      "main": [
+        [
+          {
+            "node": "Set LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Reddit Threads": {
+      "main": [
+        [
+          {
+            "node": "Set Reddit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize X Content": {
+      "main": [
+        [
+          {
+            "node": "Set X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Reddit": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set X": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a89e52d2-0c21-4a1d-9d37-029d63437afe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d10a79cbcf09c11c08e2942160977fd0c4b7008ade72d8784a1a1ef1d19e0f35"
+  },
+  "id": "nERrYE3WBVMnUOyM",
+  "tags": [
+    {
+      "createdAt": "2025-07-07T18:12:32.264Z",
+      "updatedAt": "2025-07-07T18:12:32.264Z",
+      "id": "0BvY5O2gI2eyUQ54",
+      "name": "content creation"
+    }
+  ]
+}

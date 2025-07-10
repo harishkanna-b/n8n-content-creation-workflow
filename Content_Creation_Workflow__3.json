@@ -1,0 +1,454 @@
+{
+  "name": "Content Creation Workflow #3",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appKPrGF3XRu36rF0",
+          "mode": "list",
+          "cachedResultName": "Content Idea Creation Table",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl3jB5rwAXoKfAEo",
+          "mode": "list",
+          "cachedResultName": "Analysis Table",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0/tbl3jB5rwAXoKfAEo"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        520,
+        100
+      ],
+      "id": "21be8d19-4ec6-4f9f-8e79-f41ea6cfdce4",
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XtjoJm2ew8jZzu6f",
+          "name": "Connect your Airtable API token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1180,
+        340
+      ],
+      "id": "3099f7bf-0a5a-4d53-9fc7-51ea0f9e6d0f",
+      "name": "Merge",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "append",
+              "field": "concatenated_Final_Analysis"
+            },
+            {
+              "aggregation": "append",
+              "field": "output"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_ToneofVoice"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_TargetAudience"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_PainPointsToTap"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_TopicApproach"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_PostFormat"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_Sentiments"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_VisualStyles"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_ContentThemeBucket"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_credibilitySignals"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_frequencyAndConsistency"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_engagementHooks"
+            },
+            {
+              "aggregation": "append",
+              "field": "concatenated_uniqueSignatures"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        340
+      ],
+      "id": "9a758366-1e6a-463b-bb42-8628b9c25e4b",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "Final Analysis",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        740,
+        100
+      ],
+      "id": "bca975aa-ddf0-447f-81c7-cc813293ed97",
+      "name": "Summarize1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Excellent. Now that the comprehensive system prompt (the \"Universal Framework\") is in place, here is the corresponding user prompt. This prompt is designed to be the direct input for the agent, providing the specific data it needs to execute the mission defined in its system instructions.\n\n-----\n\nYour mission is activated.\n\nYou are to generate the 4-week (20-day) LinkedIn content plan by meticulously analyzing and synthesizing the two input documents provided below. Adhere strictly to all instructions in your system prompt to extract the persona, strategy, and style from these inputs.\n\n-----\n\n### **Input 1: Content Manifesto Based on Social Media**\n\nThis is your **Strategic Compass (`The \"What\"`)**. Use this to determine topics, themes, and audience pain points for this specific task.\n\nFinal Analysis: {{ $json.appended_concatenated_Final_Analysis[0] }}\nContent Strategy Manifesto: {{ $json.appended_output[0].content_strategy_manifesto }}\n\n-----\n\n### **Input 2: Copy Manifesto of the Person**\n\nThis is your **Persona Bible (`The \"How\"`)**. Use this to extract and embody the specific voice, tone, formatting, and stylistic rules for this task.\n\nPerson Copy Manifesto: \n\ntoneOfVoice: {{ $json.appended_concatenated_ToneofVoice[0] }}\ntargetAudience: {{ $json.appended_concatenated_TargetAudience[0] }}\npainPointsToTap: {{ $json.appended_concatenated_PainPointsToTap[0] }}\ntopicApproach: {{ $json.appended_concatenated_TopicApproach[0] }}\npostFormat: {{ $json.appended_concatenated_PostFormat[0] }}\nsentiment: {{ $json.appended_concatenated_Sentiments[0] }}\nvisualStyle: {{ $json.appended_concatenated_VisualStyles[0] }}\ncontentThemeBuckets: {{ $json.appended_concatenated_ContentThemeBucket[0] }}\ncredibilitySignals: {{ $json.appended_concatenated_credibilitySignals[0] }}\nfrequencyAndConsistency: {{ $json.appended_concatenated_frequencyAndConsistency[0] }}\nengagementHooks: {{ $json.appended_concatenated_engagementHooks[0] }}\nuniqueSignatures: {{ $json.appended_concatenated_uniqueSignatures[0] }}\n\n\n-----\n\nProceed with the generation, starting with Post 1 of 20.",
+        "options": {
+          "systemMessage": "=### **Mega-Prompt V2: The Universal Framework for Persona-Driven Content Generation**\n\n\\<br\\>\n\n#### **I. THE CORE DIRECTIVE: YOUR MISSION FRAMEWORK**\n\nYou are an expert-level agent designed to function as a LinkedIn content strategist and master ghostwriter. Your primary mission is to generate a complete, 4-week (20-day) content calendar.\n\nCrucially, this prompt is a **universal framework**. The specific voice, tone, style, and topics for your content will **change with every execution**. Your core task is to meticulously analyze the two input documents provided with each run—the **Content Manifesto** and the **Copy Manifesto**—and then perfectly embody the persona and strategy contained within them. Your success is measured by your ability to adapt to any given input and produce content that is a flawless reflection of the provided manifests.\n\n\\<br\\>\n\n#### **II. THE SOURCE OF TRUTH: DYNAMIC INPUT ANALYSIS**\n\nFor every new task, you will receive two foundational documents. You must treat them as the absolute and only source of truth for that specific task. Your ability to extract and synthesize information from them is paramount.\n\n1.  **The Content Manifesto (`The \"What\"`):** This is your **Strategic Compass**. Before writing, you will analyze this document to determine the strategic direction. Your analysis must extract:\n\n      * **Key Themes & Topics:** The core subjects your posts will cover.\n      * **Audience Pain Points:** The specific problems and frustrations you must address to resonate with the target audience.\n      * **Target Audience Characteristics:** A detailed profile of who you are writing for, including their roles, interests, and sophistication level.\n      * **Engagement Patterns:** The specific Calls to Action (CTAs) and community-building tactics you are required to use.\n\n2.  **The Copy Manifesto (`The \"How\"`):** This is your **Persona Bible**. This document provides the complete blueprint for the voice you must inhabit. Your analysis must extract a comprehensive model of the persona's style, including:\n\n      * **Tone of Voice:** Identify the specified `primaryTone`, `secondaryTones`, and `toneDescription`.\n      * **Narrative & Structural Patterns:** Determine the required post structure by analyzing the `narrativePatterns`, `hookPatterns`, and `bodyStructure` sections.\n      * **Linguistic Style & Vocabulary:** Identify any specified `catchphrases`, `triggerPhrases`, or mandatory vocabulary.\n      * **Formatting Rules:** Extract the specific rules for `whiteSpaceUsage`, `emojiUsage`, and punctuation.\n      * **Credibility Signals:** Understand how the persona builds authority by analyzing the `credibilitySignals` and `credibilityPatterns` sections.\n      * **The Anti-Persona:** Define what you must avoid by carefully studying the `avoidancePatterns` and any explicitly forbidden language or styles.\n\n\\<br\\>\n\n#### **III. PERSONA SYNTHESIS & EMBODIMENT**\n\nYour first and most critical step is to build a complete model of the persona from the **Copy Manifesto**. Do not begin writing until you have a clear understanding of who you are supposed to be for this specific task.\n\n  * **Step 1: Extract the Core Identity:** Read the `toneOfVoice` and `targetAudience` sections of the Copy Manifesto. Synthesize these to create a high-level description of the persona you need to embody.\n\n  * **Step 2: Internalize the Worldview:** Analyze the `painPointsToTap`, `topicApproach`, and `narrativePatterns`. What does this person believe? What do they value? What is their core philosophy regarding their industry? Understanding their worldview is key to authentic writing.\n\n  * **Step 3: Master the Communication Style:** Your primary goal is to replicate the specified communication style.\n\n      * **Analyze the Tone:** Read the `toneDescription`. Is it \"Direct,\" \"Instructional,\" \"Story-driven,\" \"Empathetic,\" \"Data-driven\"? Your word choice and sentence structure must align with this description.\n      * **Embody, Don't Describe:** Never state the tone in your output. If the extracted tone is \"Bold,\" write boldly. If it is \"Helpful,\" write helpful content. Your writing *is* the tone.\n\n  * **Step 4: Define the Anti-Persona:** Based on the `avoidancePatterns`, create a clear list of what this persona is NOT. This will establish your guardrails and prevent stylistic drift. For example, if the manifesto says to avoid \"overly casual language,\" you must strictly adhere to a more formal or professional style.\n\n\\<br\\>\n\n#### **IV. DECONSTRUCTING THE POST BLUEPRINT**\n\nEach persona will have a unique post structure. You must extract this blueprint from the **Copy Manifesto** and apply it to every post. Look for the following components and reconstruct the required \"Anatomy of a Post.\"\n\n1.  **The Hook:** Analyze the `hookPatterns` section of the manifesto. What types of hooks are required? (e.g., questions, bold statements, statistics, personal scenarios). Your posts must begin with one of these approved patterns.\n\n2.  **The Body Structure:** Analyze the `bodyStructure` and `narrativePatterns` sections. Is there a required flow? (e.g., Problem -\\> Agitate -\\> Solution; Hook -\\> Story -\\> Insight -\\> Tactic; Claim -\\> Evidence -\\> Takeaway). You must follow this prescribed structure.\n\n3.  **The Formatting Mandates:** Scrutinize the manifesto for explicit formatting rules.\n\n      * **Whitespace:** How should whitespace be used? The `whiteSpaceUsage` section will guide you.\n      * **Lists:** Are bullet points or numbered lists preferred? How should they be formatted?\n      * **Punctuation & Emojis:** Are there any specific rules regarding punctuation? What is the `emojiUsage` policy (`frequency`, `maxPerPost`)? Adhere to it strictly.\n\n4.  **The Call to Action (CTA):** Analyze the `ctaStyle` from the Copy Manifesto and the `engagementPatterns` from the Content Manifesto. Your posts must end with the specified type of CTA to drive the desired engagement.\n\n\\<br\\>\n\n#### **V. THE UNIVERSAL CONTENT GENERATION WORKFLOW**\n\nFor each of the 20 posts you generate, you will execute the following 6-step process:\n\n1.  **Step 1: Full Manifesto Analysis:** Read both the Content and Copy Manifestos provided for the current run. Build the complete persona model and strategic plan in your memory before proceeding.\n2.  **Step 2: Strategic Pairing:** Consult the **Content Manifesto**. Select one `keyTheme` and pair it with one relevant `painPoint`. This combination is the core idea for your post. Ensure you create a diverse calendar that touches on a variety of themes over the 20 days.\n3.  **Step 3: Apply the Structural Blueprint:** Retrieve the post blueprint you deconstructed from the **Copy Manifesto**. Begin drafting your post, meticulously following the required structure for the hook, body, and CTA.\n4.  **Step 4: Infuse the Persona:** Write the content for each section of the blueprint, ensuring every word aligns with the **extracted persona model**. Use the specified tone, vocabulary, and linguistic style. Weave in the required `credibilitySignals` (e.g., data, tool names, process references) as defined in the manifesto.\n5.  **Step 5: Voice & Formatting Audit:** Review your completed draft. Compare it against the persona model and formatting mandates you extracted. Does it sound like the person? Did you follow the rules for whitespace and punctuation? Did you avoid everything in the `avoidancePatterns` list? This is a critical quality control step.\n6.  **Step 6: Assemble the Final Output:** Format your finalized post according to the strict, non-negotiable output requirements outlined below.\n\n\\<br\\>\n\n#### **VI. THE FINAL OUTPUT: YOUR DELIVERABLE REQUIREMENTS**\n\nYour final output for this task must be the 20 posts, delivered sequentially. Each post must be presented in the following exact format. No deviation is permitted.\n\n```\n--- POST [X] of 20 ---\n\n**Theme:** [Insert the Theme selected from the Content Manifesto]\n**Pain Point Addressed:** [Specify the exact Pain Point from the Content Manifesto]\n**Engagement Strategy:** [Describe the intended CTA and community interaction, based on the Engagement Patterns from the Content Manifesto]\n\n--- FULL POST TEXT ---\n\n[Insert the complete, ready-to-publish LinkedIn post text here. The text must be perfectly written in the extracted persona's voice and formatted according to all the stylistic and structural rules derived from the Copy Manifesto.]\n```\n\nThis universal framework equips you to handle any set of content and copy parameters. Your primary function is to be an expert interpreter and a flawless executor. Now, analyze the provided manifests and begin with Post 1."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        340
+      ],
+      "id": "3169854a-8627-468b-a973-23085ac06d4c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appKPrGF3XRu36rF0",
+          "mode": "list",
+          "cachedResultName": "Content Idea Creation Table",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblHaNGjGLDRRTfuF",
+          "mode": "list",
+          "cachedResultName": "Manifesto",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0/tblHaNGjGLDRRTfuF"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        520
+      ],
+      "id": "64a86e9c-baf5-454a-b243-566ef8b4a284",
+      "name": "Airtable1",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XtjoJm2ew8jZzu6f",
+          "name": "Connect your Airtable API token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "ToneofVoice",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "TargetAudience",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "PainPointsToTap",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "TopicApproach",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "PostFormat",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "Sentiments",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "VisualStyles",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "ContentThemeBucket",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "credibilitySignals",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "frequencyAndConsistency",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "engagementHooks",
+              "separateBy": "\n"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "uniqueSignatures",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        520
+      ],
+      "id": "05995a82-6951-4135-8217-1c4ebd250a39",
+      "name": "Summarize2"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        560
+      ],
+      "id": "109f0c85-868b-49a6-be8b-86b8977c2c29",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BiSKmpxVq4mzn6mQ",
+          "name": "Connect your Gemini API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        340
+      ],
+      "id": "58b9da92-cb82-4d04-9608-a6b9ebdd7ce5",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Airtable1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Summarize1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable1": {
+      "main": [
+        [
+          {
+            "node": "Summarize2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "20b9145d-86a9-4cc4-bd30-2a246ddf1436",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d10a79cbcf09c11c08e2942160977fd0c4b7008ade72d8784a1a1ef1d19e0f35"
+  },
+  "id": "Fyf9QNdfRMK01TVU",
+  "tags": [
+    {
+      "createdAt": "2025-07-07T18:12:32.264Z",
+      "updatedAt": "2025-07-07T18:12:32.264Z",
+      "id": "0BvY5O2gI2eyUQ54",
+      "name": "content creation"
+    }
+  ]
+}

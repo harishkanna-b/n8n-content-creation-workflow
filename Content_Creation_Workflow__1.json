@@ -1,0 +1,482 @@
+{
+  "name": "Content Creation Workflow #1",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f1ab8210-25ed-4d2a-abff-d2eacb76f6a7",
+      "name": "When chat message received",
+      "webhookId": "fa4cbdb0-ca05-4e15-8582-82a1f9185ff4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f036cb04-2791-4f0e-81e6-68730be5ea66",
+              "name": "LinkedIn URL",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "b4b53d25-e152-4838-9b73-3685389b116c",
+      "name": "LinkedIn URL Named"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the current item\nconst item = $input.item;\n\n// Access the URL from the item's JSON data using bracket notation\nconst url = item.json['LinkedIn URL'];\n\n// Add a check to ensure the URL is not undefined or null\nif (url) {\n  const regex = /(?:https?:\\/\\/)?(?:www\\.)?linkedin\\.com\\/in\\/([^\\/\\?]+)/;\n  const match = url.match(regex);\n  \n  // Extract username if a match is found, otherwise set it to null\n  item.json.username = match ? match[1] : null;\n} else {\n  // Set username to null if the URL doesn't exist\n  item.json.username = null;\n}\n\n// Return the modified item\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "7eecba90-1037-4b76-a228-c1e9c7a57a52",
+      "name": "Get Username"
+    },
+    {
+      "parameters": {
+        "url": "=https://linkedin-data-api.p.rapidapi.com/get-profile-posts?username={{ $json.username }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "Paste your RapidAPI key here"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "af850b53-237b-43b9-b13d-c623da1f762d",
+      "name": "Get LinkedIn posts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split Content - Code Node\n// Purpose: Extract, clean, and prepare content data from API response\n// Place this node after \"Get Profile Posts\" and before \"Split in Batches\"\n\nconsole.log(\"🚀 Starting content extraction and preparation...\");\n\n// Get the raw API response\nconst rawResponse = $json;\nlet posts = [];\n\n// Handle different API response structures\ntry {\n  if (rawResponse.data && Array.isArray(rawResponse.data)) {\n    // Structure: { data: [...] }\n    posts = rawResponse.data;\n    console.log(\"✅ Found posts in response.data\");\n  } else if (rawResponse.posts && Array.isArray(rawResponse.posts)) {\n    // Structure: { posts: [...] }\n    posts = rawResponse.posts;\n    console.log(\"✅ Found posts in response.posts\");\n  } else if (rawResponse.results && Array.isArray(rawResponse.results)) {\n    // Structure: { results: [...] }\n    posts = rawResponse.results;\n    console.log(\"✅ Found posts in response.results\");\n  } else if (rawResponse.items && Array.isArray(rawResponse.items)) {\n    // Structure: { items: [...] }\n    posts = rawResponse.items;\n    console.log(\"✅ Found posts in response.items\");\n  } else if (Array.isArray(rawResponse)) {\n    // Direct array response\n    posts = rawResponse;\n    console.log(\"✅ Response is direct array\");\n  } else if (rawResponse.response && Array.isArray(rawResponse.response)) {\n    // Structure: { response: [...] }\n    posts = rawResponse.response;\n    console.log(\"✅ Found posts in response.response\");\n  } else {\n    // Try to find any array in the response\n    for (const key in rawResponse) {\n      if (Array.isArray(rawResponse[key]) && rawResponse[key].length > 0) {\n        posts = rawResponse[key];\n        console.log(`✅ Found posts in response.${key}`);\n        break;\n      }\n    }\n  }\n} catch (error) {\n  console.error(\"❌ Error parsing API response:\", error.message);\n  throw new Error(\"Could not parse API response structure\");\n}\n\n// Validate we have posts\nif (!posts || posts.length === 0) {\n  console.error(\"❌ No posts found in API response\");\n  console.log(\"Response structure:\", Object.keys(rawResponse));\n  throw new Error(\"No posts found in API response\");\n}\n\nconsole.log(`📊 Found ${posts.length} total posts`);\n\n// Limit to 50 posts and clean/standardize data\nconst maxPosts = 50;\nconst cleanedPosts = posts.slice(0, maxPosts).map((post, index) => {\n  \n  // Extract content from various possible field names\n  const possibleContentFields = [\n    post.content,\n    post.text,\n    post.description,\n    post.body,\n    post.caption,\n    post.message,\n    post.post_content,\n    post.full_text,\n    post.summary,\n    post.excerpt\n  ];\n  \n  // Find first non-empty content field\n  let content = '';\n  for (const field of possibleContentFields) {\n    if (field && typeof field === 'string' && field.trim().length > 0) {\n      content = field.trim();\n      break;\n    }\n  }\n  \n  // If no text content found, try to extract from nested objects\n  if (!content && post.data && typeof post.data === 'object') {\n    // Try to extract from nested data object\n    const nestedContent = post.data.content || post.data.text || post.data.description;\n    if (nestedContent) content = nestedContent;\n  }\n  \n  // Extract engagement data\n  const engagement = {\n    likes: post.likes || post.like_count || post.reactions || 0,\n    comments: post.comments || post.comment_count || post.replies || 0,\n    shares: post.shares || post.share_count || post.reposts || 0,\n    views: post.views || post.view_count || 0\n  };\n  \n  // Extract author information\n  const author = post.author || post.username || post.user || post.creator || 'unknown';\n  \n  // Extract date information\n  let postDate = post.date || post.created_at || post.published_at || post.timestamp;\n  if (postDate) {\n    // Ensure date is in ISO format\n    try {\n      postDate = new Date(postDate).toISOString();\n    } catch (e) {\n      postDate = new Date().toISOString(); // Fallback to current date\n    }\n  } else {\n    postDate = new Date().toISOString();\n  }\n  \n  // Extract URL/link information\n  const postUrl = post.url || post.link || post.permalink || post.post_url || '';\n  \n  // Create standardized post object\n  return {\n    // Core identifiers\n    id: post.id || post.post_id || `post_${index + 1}`,\n    index: index + 1,\n    \n    // Content\n    content: content,\n    originalLength: content.length,\n    hasContent: content.length > 0,\n    \n    // Metadata\n    author: typeof author === 'object' ? (author.name || author.username || 'unknown') : author,\n    date: postDate,\n    platform: post.platform || 'linkedin',\n    \n    // Engagement metrics\n    engagement: engagement,\n    totalEngagement: engagement.likes + engagement.comments + engagement.shares,\n    \n    // Links and references\n    url: postUrl,\n    \n    // Content analysis flags\n    contentType: content.length === 0 ? 'no_content' : \n                content.length < 100 ? 'short' :\n                content.length < 500 ? 'medium' : 'long',\n    \n    // Processing metadata\n    processedAt: new Date().toISOString(),\n    batchReady: content.length > 10, // Only include in analysis if substantial content\n    \n    // Keep original data for reference\n    originalData: {\n      hasMedia: !!(post.media || post.images || post.video),\n      hashtags: post.hashtags || [],\n      mentions: post.mentions || [],\n      originalFields: Object.keys(post)\n    }\n  };\n});\n\n// Filter out posts without substantial content\nconst validPosts = cleanedPosts.filter(post => post.batchReady);\nconst skippedPosts = cleanedPosts.filter(post => !post.batchReady);\n\n// Log statistics\nconsole.log(\"📈 Content Processing Statistics:\");\nconsole.log(`   • Total posts retrieved: ${posts.length}`);\nconsole.log(`   • Posts processed: ${cleanedPosts.length}`);\nconsole.log(`   • Posts with valid content: ${validPosts.length}`);\nconsole.log(`   • Posts skipped (too short): ${skippedPosts.length}`);\nconsole.log(`   • Average content length: ${Math.round(validPosts.reduce((sum, p) => sum + p.originalLength, 0) / validPosts.length)} chars`);\n\n// Content type distribution\nconst contentTypes = validPosts.reduce((acc, post) => {\n  acc[post.contentType] = (acc[post.contentType] || 0) + 1;\n  return acc;\n}, {});\nconsole.log(`   • Content types:`, contentTypes);\n\n// Engagement statistics\nconst totalEngagement = validPosts.reduce((sum, p) => sum + p.totalEngagement, 0);\nconst avgEngagement = Math.round(totalEngagement / validPosts.length);\nconsole.log(`   • Average engagement per post: ${avgEngagement}`);\n\n// Check if we have enough content for analysis\nif (validPosts.length === 0) {\n  throw new Error(\"❌ No posts with substantial content found for analysis\");\n}\n\nif (validPosts.length < 10) {\n  console.warn(`⚠️ Only ${validPosts.length} posts available - may not fill all batches`);\n}\n\n// Prepare final output\nconst outputData = {\n  // Summary statistics\n  summary: {\n    totalPostsRetrieved: posts.length,\n    validPostsForAnalysis: validPosts.length,\n    skippedPosts: skippedPosts.length,\n    averageContentLength: Math.round(validPosts.reduce((sum, p) => sum + p.originalLength, 0) / validPosts.length),\n    totalEngagement: totalEngagement,\n    processingTimestamp: new Date().toISOString(),\n    readyForBatching: validPosts.length >= 10\n  },\n  \n  // The actual posts for analysis\n  posts: validPosts,\n  \n  // Skipped posts for reference\n  skippedPosts: skippedPosts.map(p => ({\n    id: p.id,\n    reason: 'Content too short',\n    length: p.originalLength,\n    preview: p.content.substring(0, 50) + '...'\n  }))\n};\n\nconsole.log(\"✅ Content splitting and preparation complete!\");\nconsole.log(`🎯 Ready to process ${validPosts.length} posts in batches`);\n\n// Return each valid post as a separate item for the Split in Batches node\nreturn validPosts.map(post => ({ json: post }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "68ed7ea2-f924-47d5-8069-634345ca2292",
+      "name": "Get Post Contents"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.analysisPrompt }}",
+        "options": {
+          "systemMessage": "=You are an expert content strategist and copywriting analyst. Your task is to analyze a collection of LinkedIn posts from a specific person and extract their unique \"Copy Manifesto\" - a comprehensive blueprint of their writing style, approach, and strategy.\n\nYour Mission\nAnalyze the provided LinkedIn content and create a detailed Copy Manifesto that captures this person's unique voice, approach, and content strategy. This manifesto will be used to understand and potentially replicate their successful LinkedIn content approach.\n\nContent to Analyze\nYou will receive LinkedIn posts, engagement data, and potentially comments from a specific LinkedIn account. Analyze patterns across ALL the content to identify consistent approaches.\n\nAnalysis Framework\n1. TONE OF VOICE ANALYSIS\n\nIdentify their dominant communication style (Conversational, Direct, Friendly, Storytelling, Bold)\nLook for secondary tones that support their main voice\nNote what they actively avoid (formal language, corporate speak, etc.)\nCapture the essence of what makes their voice unique\n\n2. TARGET AUDIENCE IDENTIFICATION\n\nDetermine who they're speaking to based on language, references, and pain points mentioned\nIdentify specific roles, industries, and business stages they target\nLook for clues about audience sophistication level and challenges\n\n3. PAIN POINT MAPPING\n\nExtract the specific problems they address repeatedly\nIdentify their \"trigger phrases\" - how they reference common frustrations\nAssess the intensity level of problems they focus on\nNote how they make pain points relatable and urgent\n\n4. TOPIC APPROACH PATTERNS\n\nDetermine if they lead with story then insight, or insight then story\nIdentify how they make content feel human vs. textbook\nLook for recurring narrative structures and content flows\n\n5. POST FORMAT ANALYSIS\n\nAnalyze their hook patterns - how they start posts\nMap their typical post structure (hook → body → CTA)\nNote their use of white space, line breaks, and formatting\nIdentify their call-to-action and engagement patterns\n\n6. SENTIMENT & EMOTIONAL BALANCE\n\nAssess their overall emotional approach\nIdentify how they balance problem-awareness with optimism\nNote their use of vulnerability, confidence, humor, and other emotional elements\n\n7. VISUAL & FORMATTING STYLE\n\nAnalyze their approach to visuals, emojis, and formatting\nNote patterns in how they structure text for readability\nIdentify any unique formatting signatures\n\n8. CONTENT THEME CATEGORIZATION\n\nCategorize their content into themes (personal stories, tactical advice, bold POVs, etc.)\nAssess frequency of each theme type\nProvide specific examples from their content\n\n9. CREDIBILITY BUILDING\n\nIdentify how they establish authority without overselling\nNote their use of numbers, results, and process mentions\nAssess their subtlety in credibility signaling\n\n10. ENGAGEMENT STRATEGY\n\nAnalyze their question-asking patterns\nIdentify how they create relatability through vulnerability\nNote community-building tactics and interaction styles\n\n11. UNIQUE SIGNATURES\n\nIdentify catchphrases, unique words, or expressions they use\nNote distinctive formatting or structural elements\nCapture what makes their content immediately recognizable\n\nOutput Instructions\nCRITICAL: You must provide your analysis in the exact JSON structure specified. Do not provide explanatory text before or after the JSON output.\nThe JSON must include all required fields and follow the schema exactly. Pay special attention to:\n\nUse the exact enum values provided for fields like primaryTone, intensityLevel, etc.\nProvide specific examples from their actual content where requested\nBe thorough but concise in descriptions\nEnsure arrays contain relevant, specific items\nFill all required fields completely\n\nAnalysis Quality Standards\n\nSpecificity: Use concrete examples from their content\nPattern Recognition: Identify consistent approaches across multiple posts\nDepth: Go beyond surface observations to capture strategic intent\nAccuracy: Base conclusions on clear evidence from the content\nUniqueness: Focus on what makes their approach distinctive\n\nRemember\nThis manifesto should capture the essence of their content strategy so completely that someone could use it to create content that feels authentically similar to their style. Focus on patterns, not one-off examples, and prioritize the elements that appear most consistently across their content.\nAnalyze the provided LinkedIn content and output the Copy Manifesto in the required JSON format."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1580,
+        100
+      ],
+      "id": "cd02bdba-7675-4ece-8afd-744eb3a4092b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-04-17-thinking",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        360
+      ],
+      "id": "c21aa3c4-e542-4a5a-bf1e-492ea3ae737e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "BiSKmpxVq4mzn6mQ",
+          "name": "Connect your Gemini API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=1",
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1640,
+        400
+      ],
+      "id": "6e95ffc6-041c-4cc4-afac-b87b434814f2",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1100,
+        0
+      ],
+      "id": "639dcc2a-2a76-4bee-abf4-5c2df312077b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node: Prepare Content for Analysis\n// Purpose: Clean, validate, and format content before sending to OpenAI\n\nconst items = $input.all();\nconst cleanedItems = [];\nconst skippedItems = [];\n\n// Get current batch info for tracking\nconst batchInfo = {\n  totalItems: items.length,\n  batchNumber: items[0]?.json?.batchNumber || 1,\n  timestamp: new Date().toISOString()\n};\n\nconsole.log(`Processing batch ${batchInfo.batchNumber} with ${batchInfo.totalItems} items`);\n\nitems.forEach((item, index) => {\n  try {\n    // Extract content from various possible fields\n    const possibleContentFields = [\n      item.json.content,\n      item.json.text, \n      item.json.description,\n      item.json.body,\n      item.json.caption,\n      item.json.message,\n      item.json.post_content,\n      item.json.full_text\n    ];\n    \n    // Find first non-empty content field\n    let rawContent = null;\n    for (const field of possibleContentFields) {\n      if (field && typeof field === 'string' && field.trim().length > 0) {\n        rawContent = field;\n        break;\n      }\n    }\n    \n    // If no text content, try to extract from object fields\n    if (!rawContent && item.json.data && typeof item.json.data === 'object') {\n      rawContent = JSON.stringify(item.json.data);\n    }\n    \n    // Validate content\n    if (rawContent && rawContent.trim().length > 10) { // Minimum 10 chars\n      const cleanedContent = rawContent\n        .trim()\n        .replace(/\\s+/g, ' ') // Normalize whitespace\n        .replace(/[^\\w\\s.,!?;:()\\-\"']/g, '') // Remove special chars\n        .substring(0, 4000); // Limit length for API\n      \n      // Prepare structured prompt for AI\n      const analysisPrompt = `Analyze this social media content for insights:\n\nContent: \"${cleanedContent}\"\n\nExtract:\n1. Pain points or frustrations mentioned\n2. Emotional tone and triggers  \n3. Key themes and topics\n4. Target audience characteristics\n5. Engagement patterns\n\nFormat response as JSON with these categories.`;\n\n      cleanedItems.push({\n        json: {\n          // Main content for analysis\n          content: cleanedContent,\n          analysisPrompt: analysisPrompt,\n          \n          // Metadata\n          itemIndex: index,\n          originalLength: rawContent.length,\n          cleanedLength: cleanedContent.length,\n          contentSource: possibleContentFields.findIndex(f => f === rawContent),\n          \n          // Batch tracking\n          batchNumber: batchInfo.batchNumber,\n          batchItemIndex: index,\n          \n          // Keep original for reference\n          originalData: {\n            id: item.json.id,\n            author: item.json.author || item.json.username,\n            date: item.json.date || item.json.created_at,\n            platform: item.json.platform || 'unknown'\n          }\n        }\n      });\n      \n    } else {\n      // Track skipped items\n      skippedItems.push({\n        index: index,\n        reason: !rawContent ? 'No content found' : 'Content too short',\n        availableFields: Object.keys(item.json)\n      });\n    }\n    \n  } catch (error) {\n    console.error(`Error processing item ${index}:`, error);\n    skippedItems.push({\n      index: index,\n      reason: 'Processing error',\n      error: error.message\n    });\n  }\n});\n\n// Log summary\nconsole.log(`Batch ${batchInfo.batchNumber} processing complete:`);\nconsole.log(`- Items processed: ${cleanedItems.length}`);\nconsole.log(`- Items skipped: ${skippedItems.length}`);\nif (skippedItems.length > 0) {\n  console.log('Skipped items:', skippedItems);\n}\n\n// Return only valid items for analysis\nif (cleanedItems.length === 0) {\n  throw new Error(`No valid content found in batch ${batchInfo.batchNumber}`);\n}\n\nreturn cleanedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        100
+      ],
+      "id": "9315e36d-466c-4683-932d-fbd93a35d99d",
+      "name": "Prepare Content"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixed Accumulate Results Code - No external node references\nconst staticData = $getWorkflowStaticData('global');\n\n// Initialize storage on first run\nif (!staticData.contentAnalysis) {\n  staticData.contentAnalysis = {\n    batchResults: [],\n    startTime: new Date().toISOString(),\n    processedBatches: 0,\n    processedItems: 0,\n    totalExpected: 50,\n    batchesExpected: 5\n  };\n  console.log(\"🚀 Starting new content analysis session\");\n}\n\n// Get current batch analysis result from input\nconst currentBatchResult = {\n  batchNumber: staticData.contentAnalysis.processedBatches + 1,\n  timestamp: new Date().toISOString(),\n  \n  // Extract AI analysis from current input (handle different formats)\n  aiAnalysis: $json.output || \n              $json.choices?.[0]?.message?.content || \n              $json.response || \n              $json.text ||\n              JSON.stringify($json),\n              \n  // Count items in this batch from input\n  itemsInBatch: $input.all().length,\n  \n  // Processing metadata\n  batchProcessingTime: new Date().toISOString(),\n  \n  // Keep raw response for debugging\n  rawResponse: $json\n};\n\n// Store the batch result\nstaticData.contentAnalysis.batchResults.push(currentBatchResult);\nstaticData.contentAnalysis.processedBatches++;\nstaticData.contentAnalysis.processedItems += currentBatchResult.itemsInBatch;\n\n// Calculate progress\nconst progress = {\n  batchesComplete: staticData.contentAnalysis.processedBatches,\n  totalBatches: staticData.contentAnalysis.batchesExpected,\n  itemsProcessed: staticData.contentAnalysis.processedItems,\n  totalItems: staticData.contentAnalysis.totalExpected,\n  percentComplete: Math.round((staticData.contentAnalysis.processedBatches / staticData.contentAnalysis.batchesExpected) * 100)\n};\n\n// Check if all batches are complete\nconst isComplete = staticData.contentAnalysis.processedBatches >= staticData.contentAnalysis.batchesExpected;\n\n// Log progress\nconsole.log(`📈 Batch ${progress.batchesComplete}/${progress.totalBatches} complete (${progress.percentComplete}%)`);\nconsole.log(`📊 Items processed: ${progress.itemsProcessed}/${progress.totalItems}`);\n\nif (isComplete) {\n  console.log(\"🎉 All batches complete! Ready for final analysis.\");\n  staticData.contentAnalysis.completedAt = new Date().toISOString();\n}\n\n// Return current state for next node\nreturn [{\n  json: {\n    // Completion status\n    isComplete: isComplete,\n    isLastBatch: isComplete,\n    \n    // Progress tracking\n    progress: progress,\n    \n    // Current batch info\n    currentBatch: {\n      number: currentBatchResult.batchNumber,\n      analysis: currentBatchResult.aiAnalysis,\n      itemCount: currentBatchResult.itemsInBatch\n    },\n    \n    // All accumulated data (for final analysis)\n    allBatchResults: staticData.contentAnalysis.batchResults,\n    \n    // Session metadata\n    sessionInfo: {\n      startTime: staticData.contentAnalysis.startTime,\n      completedAt: staticData.contentAnalysis.completedAt,\n      totalProcessingTime: isComplete ? \n        (new Date() - new Date(staticData.contentAnalysis.startTime)) : null\n    },\n    \n    // For debugging\n    debug: {\n      currentInput: Object.keys($json),\n      batchResultsCount: staticData.contentAnalysis.batchResults.length,\n      staticDataKeys: Object.keys(staticData)\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1940,
+        100
+      ],
+      "id": "9d6edf1f-5ad2-4f3d-9797-38480f4cdecd",
+      "name": "Acumulate Results"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appKPrGF3XRu36rF0",
+          "mode": "list",
+          "cachedResultName": "Content Idea Creation Table",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl3jB5rwAXoKfAEo",
+          "mode": "list",
+          "cachedResultName": "Analysis Table",
+          "cachedResultUrl": "https://airtable.com/appKPrGF3XRu36rF0/tbl3jB5rwAXoKfAEo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Batch Number": "={{ $('Acumulate Results').item.json.progress.batchesComplete }}",
+            "totalBatches": "={{ $('Acumulate Results').item.json.progress.totalBatches }}",
+            "itemsProcessed": "={{ $('Acumulate Results').item.json.progress.itemsProcessed }}",
+            "Final Analysis": "={{ $('Acumulate Results').item.json.currentBatch.analysis }}",
+            "Content Analyzed": "={{ $('Acumulate Results').item.json.allBatchResults }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Batch Number",
+              "displayName": "Batch Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "totalBatches",
+              "displayName": "totalBatches",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "itemsProcessed",
+              "displayName": "itemsProcessed",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Final Analysis",
+              "displayName": "Final Analysis",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Content Analyzed",
+              "displayName": "Content Analyzed",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2160,
+        100
+      ],
+      "id": "7877849e-d130-44c7-9894-145ab7d9ab43",
+      "name": "Add To Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "XtjoJm2ew8jZzu6f",
+          "name": "Connect your Airtable API token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "nERrYE3WBVMnUOyM",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        -140
+      ],
+      "id": "1e369c39-2f07-4234-8ce2-7f09f23d27e2",
+      "name": "Call - Content Creation Workflow #2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn URL Named",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn URL Named": {
+      "main": [
+        [
+          {
+            "node": "Get Username",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Username": {
+      "main": [
+        [
+          {
+            "node": "Get LinkedIn posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get LinkedIn posts": {
+      "main": [
+        [
+          {
+            "node": "Get Post Contents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Post Contents": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Call - Content Creation Workflow #2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Content": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Acumulate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acumulate Results": {
+      "main": [
+        [
+          {
+            "node": "Add To Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add To Airtable": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1bb26c37-3803-4ba3-b22d-3e1679e68359",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d10a79cbcf09c11c08e2942160977fd0c4b7008ade72d8784a1a1ef1d19e0f35"
+  },
+  "id": "xnm9i8bn1WNZ7lnJ",
+  "tags": [
+    {
+      "createdAt": "2025-07-07T18:12:32.264Z",
+      "updatedAt": "2025-07-07T18:12:32.264Z",
+      "id": "0BvY5O2gI2eyUQ54",
+      "name": "content creation"
+    }
+  ]
+}
